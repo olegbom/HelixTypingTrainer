@@ -1,0 +1,17 @@
+theme = "base16_transparent"
+
+[editor]
+line-number = "relative"
+whitespace.render = "none"
+cursorline = false
+cursor-shape.normal = "bar"
+cursor-shape.insert = "bar"
+cursor-shape.select = "bar"
+soft-wrap.enable = true
+gutters = []
+shell = ["pwsh", "-nop", "-nol", "-noni", "-of", "Text", "-c"]
+auto-pairs = false
+# lsp.display-inlay-hints = true
+
+[keys.normal.space]
+B = ":! git diff --no-index test.md -- test1.md"
