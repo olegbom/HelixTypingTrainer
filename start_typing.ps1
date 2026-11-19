@@ -60,9 +60,9 @@ git diff --no-index $FileName $ExerciseName
 if( $LastExitCode -eq 0 )
 {
     $time = (Get-Date) - $start;
-    echo "Complete with $($time.TotalSeconds) s"
+    echo ("Complete with {0:mm}:{0:ss}.{1:000}" -f $time, ($time.Milliseconds))
     echo "Characters $totalCharactesCount"
-    echo "Speed $($totalCharactesCount/$time.TotalMinutes) chr/min"
+    echo ("Speed {0:f2} char/min" -f ($totalCharactesCount/$time.TotalMinutes))
 }
 else
 {
