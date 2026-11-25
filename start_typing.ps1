@@ -65,27 +65,32 @@ $pattern = "(\d{2}):(\d{2}):(\d{2})\.(\d{3})  INFO   wezterm_gui::termwindow::ke
 
 if( $LastExitCode -eq 0 )
 {
+    $keyPressedCount = 0;
+    $lines | Select-String -Pattern $pattern |
+    Foreach-Object {
+        $mHour, $mMin, $mSec, $mMillisec, $mKey, $mModifiers, $mIsKeyDown = $_.Matches[0].Groups[1..7].Value
+        if ( ($mKey.substring(0, 4) -eq "Char") -and ($mIsKeyDown -eq "true") ) {
+            $keyPressedCount++;
+            # [PSCustomObject] @{
+            #     Time = [int]$mHour*60*60*1000 + [int]$mMin*60*1000 + [int]$mSec*1000 + [int]$mMillisec
+            #     Key = $mKey
+            #     Modifiers = $mModifiers
+            #     IsKeyDown = $mIsKeyDown -eq "true"
+            # }
+        }
+    }
+
     $time = (Get-Date) - $start;
     echo ("Complete with {0:mm}:{0:ss}.{1:000}" -f $time, ($time.Milliseconds))
     echo "Characters $totalCharactesCount"
+    echo "Key Pressed Count $keyPressedCount"
     echo ("Speed {0:f2} char/min" -f ($totalCharactesCount/$time.TotalMinutes))
-
+    echo ("Char/Key Ratio {0:f2} %" -f (100.0 * $totalCharactesCount/$keyPressedCount))
 }
 else
 {
     echo "Exercise fault!"
 }
 
-    $lines | Select-String -Pattern $pattern |
-    Foreach-Object {
-        $mHour, $mMin, $mSec, $mMillisec, $mKey, $mModifiers, $mIsKeyDown = $_.Matches[0].Groups[1..7].Value
-        [PSCustomObject] @{
-            Time = [int]$mHour*60*60*1000 + [int]$mMin*60*1000 + [int]$mSec*1000 + [int]$mMillisec
-            Key = $mKey
-            Modifiers = $mModifiers
-            IsKeyDown = $mIsKeyDown -eq "true"
-        }
-    }
 
 rm $ExerciseName
-
