@@ -6,6 +6,7 @@ param(
 )
 
 $FileName = (Get-Item -Path $FileName).FullName
+echo $FileName
 
 $lines = Get-Content -Path $FileName
 
@@ -53,9 +54,14 @@ $hx_line = $delta + 1;
 wezterm-gui --config-file (Join-Path $PSScriptRoot .wezterm_back.lua) start -- hx -w $PSScriptRoot ("$FileName" + ":$hx_line")
 sleep 0.1
 $start = Get-Date;
-wezterm --config-file (Join-Path $PSScriptRoot .wezterm_front.lua) start -- hx -w $PSScriptRoot ("$ExerciseName" + ":$hx_line")
 
+$buf = $env:WEZTERM_LOG
+$env:WEZTERM_LOG = "wezterm_gui=info"
+$lines = wezterm --config-file (Join-Path $PSScriptRoot .wezterm_front.lua) start -- hx -w $PSScriptRoot ("$ExerciseName" + ":$hx_line") *>&1
+$env:WEZTERM_LOG = $buf
 git diff --no-index $FileName $ExerciseName
+
+$pattern = "(\d{2}):(\d{2}):(\d{2})\.(\d{3})  INFO   wezterm_gui::termwindow::keyevent > key_event KeyEvent \{.*key: ([^,]*), modifiers: ([^,]*), .* key_is_down: (\w+), raw.*\}"
 
 if( $LastExitCode -eq 0 )
 {
@@ -63,11 +69,23 @@ if( $LastExitCode -eq 0 )
     echo ("Complete with {0:mm}:{0:ss}.{1:000}" -f $time, ($time.Milliseconds))
     echo "Characters $totalCharactesCount"
     echo ("Speed {0:f2} char/min" -f ($totalCharactesCount/$time.TotalMinutes))
+
 }
 else
 {
     echo "Exercise fault!"
 }
+
+    $lines | Select-String -Pattern $pattern |
+    Foreach-Object {
+        $mHour, $mMin, $mSec, $mMillisec, $mKey, $mModifiers, $mIsKeyDown = $_.Matches[0].Groups[1..7].Value
+        [PSCustomObject] @{
+            Time = [int]$mHour*60*60*1000 + [int]$mMin*60*1000 + [int]$mSec*1000 + [int]$mMillisec
+            Key = $mKey
+            Modifiers = $mModifiers
+            IsKeyDown = $mIsKeyDown -eq "true"
+        }
+    }
 
 rm $ExerciseName
 

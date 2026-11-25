@@ -17,6 +17,7 @@ local opacity = 0.6
 
 config.window_background_opacity = opacity
 config.hide_tab_bar_if_only_one_tab = true
+
 config.color_scheme = 'Breeze (Gogh)'
 config.font =
   wezterm.font('JetBrainsMono NF', {
@@ -27,5 +28,7 @@ config.font =
 -- config.cell_width = 9.0/8.0
 config.font_size = 12
 config.window_padding = {left = 0, right = 0, top = 0, bottom = 0}
+
+config.debug_key_events = true
 
 return config
