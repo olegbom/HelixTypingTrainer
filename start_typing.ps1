@@ -81,11 +81,15 @@ if( $LastExitCode -eq 0 )
     }
 
     $time = (Get-Date) - $start;
-    echo ("Complete with {0:mm}:{0:ss}.{1:000}" -f $time, ($time.Milliseconds))
-    echo "Characters $totalCharactesCount"
-    echo "Key Pressed Count $keyPressedCount"
-    echo ("Speed {0:f2} char/min" -f ($totalCharactesCount/$time.TotalMinutes))
-    echo ("Char/Key Ratio {0:f2} %" -f (100.0 * $totalCharactesCount/$keyPressedCount))
+    $results = @(
+        [PSCustomObject] @{ Parameter = "Duration"; Value = "{0:mm}:{0:ss}.{1:000}" -f $time, ($time.Milliseconds) }
+        [PSCustomObject] @{ Parameter = "Characters"; Value = "$totalCharactesCount" }
+        [PSCustomObject] @{ Parameter = "Key Pressed"; Value = "$keyPressedCount" }
+        [PSCustomObject] @{ Parameter = "Speed"; Value = "{0:f2} char/min" -f ($totalCharactesCount/$time.TotalMinutes) }
+        [PSCustomObject] @{ Parameter = "Char/Key Ratio"; Value = "{0:f2} %" -f (100.0 * $totalCharactesCount/$keyPressedCount) }
+    )
+
+    $results | Format-Table
 }
 else
 {
