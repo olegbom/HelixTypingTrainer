@@ -35,12 +35,12 @@ for ($i = 0; $i -lt $delta; $i++)
     $lines[$i] | Out-File $ExerciseName -Append
 }
 
-$totalCharactesCount = 0;
+$totalCharsCount = 0;
 
 for ($i = $delta; $i -lt ($delta + $LinesCount); $i++)
 {
     "" | Out-File $ExerciseName -Append
-    $totalCharactesCount += $lines[$i].Length;
+    $totalCharsCount += $lines[$i].Length;
 }
 
 
@@ -66,11 +66,16 @@ $pattern = "(\d{2}):(\d{2}):(\d{2})\.(\d{3})  INFO   wezterm_gui::termwindow::ke
 if( $LastExitCode -eq 0 )
 {
     $keyPressedCount = 0;
+    $deletePressedCount = 0;
     $lines | Select-String -Pattern $pattern |
     Foreach-Object {
         $mHour, $mMin, $mSec, $mMillisec, $mKey, $mModifiers, $mIsKeyDown = $_.Matches[0].Groups[1..7].Value
         if ( ($mKey.substring(0, 4) -eq "Char") -and ($mIsKeyDown -eq "true") ) {
             $keyPressedCount++;
+            if( $mKey -eq "Char('\u{8}')" )
+            {
+                $deletePressedCount++;
+            }
             # [PSCustomObject] @{
             #     Time = [int]$mHour*60*60*1000 + [int]$mMin*60*1000 + [int]$mSec*1000 + [int]$mMillisec
             #     Key = $mKey
@@ -83,10 +88,12 @@ if( $LastExitCode -eq 0 )
     $time = (Get-Date) - $start;
     $results = @(
         [PSCustomObject] @{ Parameter = "Duration"; Value = "{0:mm}:{0:ss}.{1:000}" -f $time, ($time.Milliseconds) }
-        [PSCustomObject] @{ Parameter = "Characters"; Value = "$totalCharactesCount" }
+        [PSCustomObject] @{ Parameter = "Characters"; Value = "$totalCharsCount" }
         [PSCustomObject] @{ Parameter = "Key Pressed"; Value = "$keyPressedCount" }
-        [PSCustomObject] @{ Parameter = "Speed"; Value = "{0:f2} char/min" -f ($totalCharactesCount/$time.TotalMinutes) }
-        [PSCustomObject] @{ Parameter = "Char/Key Ratio"; Value = "{0:f2} %" -f (100.0 * $totalCharactesCount/$keyPressedCount) }
+        [PSCustomObject] @{ Parameter = "Delete Pressed"; Value = "$deletePressedCount" }
+        [PSCustomObject] @{ Parameter = "Speed"; Value = "{0:f2} char/min" -f ($totalCharsCount/$time.TotalMinutes) }
+        [PSCustomObject] @{ Parameter = "Char/Key Ratio"; Value = "{0:f2} %" -f (100.0 * $totalCharsCount/$keyPressedCount) }
+        [PSCustomObject] @{ Parameter = "1 - Delete/Char"; Value = "{0:f2} %" -f (100.0 * (1 - $deletePressedCount/$totalCharsCount)) }
     )
 
     $results | Format-Table
